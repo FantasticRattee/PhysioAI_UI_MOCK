@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PhysioAI logo mark — stick figure body, cream stroke. Intended to sit on a sage-green background. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#F5F1E8" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" role="img" aria-label="PhysioAI">
+  <circle cx="12" cy="4.5" r="2"/>
+  <path d="M12 6.5v6M7 9l10 0M9 12.5l-2 8M15 12.5l2 8"/>
+</svg>
