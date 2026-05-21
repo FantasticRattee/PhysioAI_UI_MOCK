@@ -1185,11 +1185,13 @@ function ScreenDashboard() {
 
   return (
     <div className="dash-outer" style={{ display: 'flex', minHeight: 'calc(100vh - 64px)', background: DT.bg }}>
-      {/* Sidebar */}
+      {/* Sidebar — sticky so account card stays at bottom of viewport across all views */}
       <div className="dash-sidebar" style={{
         width: 220, background: '#FAF6EC', padding: '20px 16px',
         display: 'flex', flexDirection: 'column', gap: 4,
-        boxShadow: `inset -1px 0 0 ${DT.line}`
+        boxShadow: `inset -1px 0 0 ${DT.line}`,
+        position: 'sticky', top: 64, height: 'calc(100vh - 64px)',
+        alignSelf: 'flex-start', overflowY: 'auto'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '6px 8px 18px' }}>
           <div style={{
