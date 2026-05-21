@@ -1151,9 +1151,9 @@ function ScreenDashboard() {
   }
 
   return (
-    <div style={{ display: 'flex', height: '100%', background: DT.bg }}>
+    <div className="dash-outer" style={{ display: 'flex', height: '100%', background: DT.bg }}>
       {/* Sidebar */}
-      <div style={{
+      <div className="dash-sidebar" style={{
         width: 220, background: '#FAF6EC', padding: '20px 16px',
         display: 'flex', flexDirection: 'column', gap: 4,
         boxShadow: `inset -1px 0 0 ${DT.line}`
@@ -1202,7 +1202,7 @@ function ScreenDashboard() {
       </div>
 
       {/* Patient list column */}
-      <div style={{ width: 320, background: '#FFFFFF', boxShadow: `inset -1px 0 0 ${DT.line}`, display: 'flex', flexDirection: 'column' }}>
+      <div className="dash-patient-list" style={{ width: 320, background: '#FFFFFF', boxShadow: `inset -1px 0 0 ${DT.line}`, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '18px 18px 12px' }}>
           <div style={{ fontSize: 11, letterSpacing: 1, color: DT.ink3, textTransform: 'uppercase' }}>{t.patients}</div>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'end', marginTop: 4 }}>
@@ -1284,7 +1284,7 @@ function ScreenDashboard() {
       </div>
 
       {/* Main content */}
-      <div style={{ flex: 1, padding: 24, overflow: 'auto' }}>
+      <div className="dash-main" style={{ flex: 1, padding: 24, overflow: 'auto' }}>
         {/* Header with mode + category + caregiver */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div style={{ flex: 1 }}>
@@ -1335,7 +1335,7 @@ function ScreenDashboard() {
         </div>
 
         {/* KPI row */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+        <div className="dash-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
           {[
           { l: t.adherence, v: current.adh + '%', tone: DT.good, spark: adherenceSpark, sub: lang === 'th' ? '↑ 6% จากสัปดาห์ก่อน' : '↑ 6% vs last week' },
           { l: t.avgScore, v: current.score, tone: DT.brand, spark: sessionsSpark, sub: lang === 'th' ? 'ท่าทางดีขึ้น' : 'Form improving' },
@@ -1357,7 +1357,7 @@ function ScreenDashboard() {
         </div>
 
         {/* Live session + Plan + Joint breakdown */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 14, marginBottom: 14 }}>
+        <div className="dash-grid-main" style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 14, marginBottom: 14 }}>
           {/* Session review card — async playback of the patient's last recorded session */}
           <div style={{
             padding: 0, background: DT.surface, borderRadius: 14, overflow: 'hidden',
@@ -1520,7 +1520,7 @@ function ScreenDashboard() {
         </div>
 
         {/* Joint breakdown + Session timeline */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 14, marginBottom: 14 }}>
+        <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 14, marginBottom: 14 }}>
           {/* Per-joint score breakdown */}
           <div style={{
             padding: 14, background: DT.surface, borderRadius: 14,
@@ -1590,7 +1590,7 @@ function ScreenDashboard() {
         </div>
 
         {/* TTS log + Alerts */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
           {/* TTS cue log */}
           <div style={{
             padding: 14, background: DT.surface, borderRadius: 14,
@@ -1663,7 +1663,7 @@ function ScreenDashboard() {
         </div>
 
         {/* Comments thread + Adjust next session */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 14 }}>
+        <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 14 }}>
           {/* Comment thread — async messages between therapist + patient */}
           <div style={{
             padding: 14, background: DT.surface, borderRadius: 14,
@@ -1937,7 +1937,7 @@ function ScreenTherapistSetup() {
       </header>
 
       {/* Main grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, padding: 20, flex: 1 }}>
+      <div className="setup-main" style={{ display: 'grid', gridTemplateColumns: '1fr 380px', gap: 20, padding: 20, flex: 1 }}>
         {/* Video card */}
         <div style={{ background: T.surface, borderRadius: 18, border: `1px solid ${T.line}`, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
           <div style={{
