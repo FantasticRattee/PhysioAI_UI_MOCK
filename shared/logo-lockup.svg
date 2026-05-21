@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- PhysioAI horizontal lockup — body figure + bolt side by side. Use in app headers, presentations, etc. -->
+<svg xmlns="http://www.w3.org/2000/svg" width="120" height="48" viewBox="0 0 60 24" role="img" aria-label="PhysioAI">
+  <!-- Body figure on the left -->
+  <g fill="none" stroke="#7FA876" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="4.5" r="2"/>
+    <path d="M12 6.5v6M7 9l10 0M9 12.5l-2 8M15 12.5l2 8"/>
+  </g>
+  <!-- Bolt on the right -->
+  <polygon points="42,3 33,15 40,15 39,21 49,11 42,11" fill="#7FA876"/>
+</svg>
