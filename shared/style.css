@@ -1,0 +1,72 @@
+html, body {
+  margin: 0;
+  padding: 0;
+  background: #F5F1E8;
+  color: #2A2823;
+  font-family: "Inter Tight", system-ui, sans-serif;
+}
+*, *::before, *::after { box-sizing: border-box; }
+#root { min-height: 100vh; }
+
+/* MobileShell — centers a phone bezel on desktop */
+.mobile-shell {
+  min-height: 100vh;
+  background: #EDE7D9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 20px 40px;
+}
+
+/* WebShell — full-viewport background */
+.web-shell {
+  min-height: 100vh;
+  padding-top: 64px;
+  background: #F5F1E8;
+}
+
+/* Landing */
+.landing {
+  min-height: 100vh;
+  background: #F5F1E8;
+  color: #2A2823;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 24px 40px;
+  text-align: center;
+  gap: 28px;
+}
+.landing .logo {
+  width: 72px; height: 72px; border-radius: 22px;
+  background: #7FA876; display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 12px 32px rgba(127,168,118,0.32);
+}
+.landing .eyebrow {
+  font-size: 12px; letter-spacing: 1.6px; color: #8A8275;
+  font-weight: 500; text-transform: uppercase;
+}
+.landing h1 {
+  margin: 10px 0 0; font-size: 34px; color: #2A2823;
+  letter-spacing: -0.6px; font-weight: 600;
+}
+.landing p { margin: 10px 0 0; font-size: 15px; color: #6B655A; }
+.role-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 14px; max-width: 560px; width: 100%; margin-top: 8px;
+}
+.role-card {
+  text-decoration: none; background: #FFFFFF; color: #2A2823;
+  padding: 28px; border-radius: 18px; border: 1px solid rgba(60,48,30,0.08);
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+  transition: transform .15s, box-shadow .15s;
+}
+.role-card:hover { transform: translateY(-2px); box-shadow: 0 12px 28px rgba(0,0,0,0.06); }
+.role-card .role-icon {
+  width: 56px; height: 56px; border-radius: 16px;
+  background: rgba(127,168,118,0.14); display: flex; align-items: center; justify-content: center;
+}
+.role-card .role-title { font-size: 16px; font-weight: 600; }
+.role-card .role-sub { font-size: 13px; color: #8A8275; }
+.landing .hint { font-size: 12px; color: #8A8275; margin-top: 16px; }

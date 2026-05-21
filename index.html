@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<title>PhysioAI · Home</title>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter+Tight:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=IBM+Plex+Sans+Thai:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="shared/style.css"/>
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+<script type="text/babel" data-presets="react" src="shared/components.js"></script>
+<script type="text/babel" data-presets="react" src="shared/nav.js"></script>
+</head>
+<body>
+<div id="root"></div>
+<script type="text/babel" data-presets="react">
+function Landing({ lang }) {
+  const T = window.pxTokens;
+  return (
+    <div className="landing">
+      <div className="logo">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#F5F1E8" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
+          <circle cx="12" cy="4.5" r="2" />
+          <path d="M12 6.5v6M7 9l10 0M9 12.5l-2 8M15 12.5l2 8" />
+        </svg>
+      </div>
+      <div>
+        <div className="eyebrow">PhysioAI</div>
+        <h1>{lang === 'th' ? 'กายภาพบำบัดที่บ้าน ด้วย AI' : 'On-device physiotherapy AI'}</h1>
+        <p>{lang === 'th' ? 'สำหรับผู้พิการในประเทศไทย · ทำงานบนอุปกรณ์' : 'For disabled persons in Thailand · No video leaves the device'}</p>
+      </div>
+      <div className="role-grid">
+        <a className="role-card" href="patient/home.html">
+          <div className="role-icon"><Ico name="body" size={28} color={T.brand} /></div>
+          <div className="role-title">{lang === 'th' ? 'ฉันเป็นผู้ป่วย' : "I'm a Patient"}</div>
+          <div className="role-sub">{lang === 'th' ? 'แอปบนมือถือ' : 'Mobile app'}</div>
+        </a>
+        <a className="role-card" href="therapist/dashboard.html">
+          <div className="role-icon"><Ico name="users" size={28} color={T.brand} /></div>
+          <div className="role-title">{lang === 'th' ? 'ฉันเป็นนักกายภาพ' : "I'm a Therapist"}</div>
+          <div className="role-sub">{lang === 'th' ? 'แดชบอร์ดบนเว็บ' : 'Web dashboard'}</div>
+        </a>
+      </div>
+      <div className="hint">
+        {lang === 'th' ? 'เปิดเมนูมุมบนขวาเพื่อไปหน้าจออื่น' : 'Use the menu in the top-right to jump to any screen'}
+      </div>
+    </div>
+  );
+}
+
+function App() {
+  const [lang, setLang] = useLangState();
+  return (
+    <LangCtx.Provider value={lang}>
+      <PxKeyframes />
+      <NavBar currentPath="" lang={lang} setLang={setLang} />
+      <Landing lang={lang} />
+    </LangCtx.Provider>
+  );
+}
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
