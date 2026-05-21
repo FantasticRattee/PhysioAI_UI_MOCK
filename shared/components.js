@@ -1090,13 +1090,13 @@ function ScreenDashboard() {
 
   // `fresh` = newly-pushed session (since last therapist review) — NOT live, since therapist is async only
   const patients = [
-    { id: 'aree',    name: 'Aree S.',    nameTh: 'อารีย์ ส.',   cond: 'Post-op knee',        condTh: 'หลังผ่าตัดเข่า',     mode: 'standard',    cat: 'motor',   adh: 86, score: 91, last: '23m ago',   fresh: true,  alerts: [{ type: 'low_score', detail: 'L. knee 62 (rep 3)' }] },
+    { id: 'aree',    name: 'Aree S.',    nameTh: 'อารีย์ ส.',   cond: 'Post-op knee',        condTh: 'หลังผ่าตัดเข่า',     mode: 'standard',    cat: 'motor',   adh: 86, score: 91, last: '23m ago',   fresh: true,  alerts: [{ type: 'low_score', detail: 'L. knee 62 (rep 3)', time: '23m' }] },
     { id: 'somchai', name: 'Somchai T.', nameTh: 'สมชาย ท.',    cond: 'Rotator cuff tear',   condTh: 'เอ็นข้อไหล่ฉีก',    mode: 'simplified',  cat: 'motor',   adh: 72, score: 84, last: '2h ago',    fresh: true,  alerts: [] },
     { id: 'noi',     name: 'Noi P.',     nameTh: 'น้อย พ.',     cond: 'Stroke rehab',         condTh: 'ฟื้นฟูหลังเส้นเลือดสมอง', mode: 'caregiver',   cat: 'motor',   adh: 94, score: 88, last: 'yesterday', fresh: false, alerts: [], caregiver: 'Khun Boon (daughter)' },
-    { id: 'kwan',    name: 'Kwan R.',    nameTh: 'ขวัญ ร.',     cond: 'Hip replacement',      condTh: 'เปลี่ยนข้อสะโพก',  mode: 'audio_only',  cat: 'vision',  adh: 58, score: 76, last: '4 days',    fresh: false, alerts: [{ type: 'miss', detail: '2 sessions missed' }, { type: 'low_score', detail: 'Trend ↓' }] },
+    { id: 'kwan',    name: 'Kwan R.',    nameTh: 'ขวัญ ร.',     cond: 'Hip replacement',      condTh: 'เปลี่ยนข้อสะโพก',  mode: 'audio_only',  cat: 'vision',  adh: 58, score: 76, last: '4 days',    fresh: false, alerts: [{ type: 'miss', detail: '2 sessions missed', time: '4h' }, { type: 'low_score', detail: 'Trend ↓', time: '6h' }] },
     { id: 'malee',   name: 'Malee J.',   nameTh: 'มาลี จ.',     cond: 'Lower-back pain',      condTh: 'ปวดหลังส่วนล่าง',   mode: 'visual_only', cat: 'hearing', adh: 88, score: 92, last: 'today',     fresh: true,  alerts: [] },
     { id: 'anan',    name: 'Anan V.',    nameTh: 'อนันต์ ว.',   cond: 'ACL recovery',         condTh: 'ฟื้นฟูเอ็นไขว้หน้าเข่า', mode: 'standard',    cat: 'motor',   adh: 81, score: 87, last: 'today',     fresh: false, alerts: [] },
-    { id: 'pim',     name: 'Pim O.',     nameTh: 'พิม อ.',      cond: 'Frozen shoulder',      condTh: 'ข้อไหล่ติด',          mode: 'audio_only',  cat: 'vision',  adh: 77, score: 80, last: '3 days',    fresh: false, alerts: [{ type: 'fall', detail: 'Possible fall 16:32' }] },
+    { id: 'pim',     name: 'Pim O.',     nameTh: 'พิม อ.',      cond: 'Frozen shoulder',      condTh: 'ข้อไหล่ติด',          mode: 'audio_only',  cat: 'vision',  adh: 77, score: 80, last: '3 days',    fresh: false, alerts: [{ type: 'fall', detail: 'Possible fall 16:32', time: '8h' }] },
   ];
 
   const current = patients.find((p) => p.id === selected);
@@ -1585,7 +1585,7 @@ function ScreenDashboard() {
           </div>
           <div style={{ padding: 0, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}`, overflow: 'hidden' }}>
             {patients.flatMap((p) =>
-              p.alerts.map((a) => ({ ...a, patient: p, time: ['5m', '23m', '1h', '4h', '8h', '1d'][Math.floor(Math.random() * 6)] }))
+              p.alerts.map((a) => ({ ...a, patient: p }))
             ).filter((a) => alertFilter === 'all' || a.type === alertFilter).map((a, i, arr) => {
               const meta = ALERT_META[a.type];
               const pn = lang === 'th' ? a.patient.nameTh : a.patient.name;
