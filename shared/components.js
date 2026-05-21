@@ -1075,6 +1075,8 @@ function ScreenDashboard() {
   const [view, setView] = React.useState('patients');
   const [alertFilter, setAlertFilter] = React.useState('all');
   const [schedDay, setSchedDay] = React.useState(2);
+  const [notifs, setNotifs] = React.useState({ fall: true, miss: true, low: true, msg: true, weekly: false });
+  const toggleNotif = (k) => setNotifs((prev) => ({ ...prev, [k]: !prev[k] }));
   React.useEffect(() => {
     let raf,t0 = performance.now();
     const tick = (now) => {
@@ -1166,7 +1168,10 @@ function ScreenDashboard() {
             width: 28, height: 28, borderRadius: 8, background: DT.brand,
             display: 'flex', alignItems: 'center', justifyContent: 'center'
           }}>
-            <Ico name="bolt" size={16} color="#F5F1E8" />
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#F5F1E8" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-label="PhysioAI">
+              <circle cx="12" cy="4.5" r="2" />
+              <path d="M12 6.5v6M7 9l10 0M9 12.5l-2 8M15 12.5l2 8" />
+            </svg>
           </div>
           <div style={{ fontSize: 15, fontWeight: 600, color: DT.ink, letterSpacing: -0.2 }}>{t.appName}</div>
         </div>
@@ -1653,19 +1658,22 @@ function ScreenDashboard() {
             <div style={{ padding: 16, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
               <div style={{ fontSize: 11, letterSpacing: 0.8, color: DT.ink3, textTransform: 'uppercase', fontWeight: 600, marginBottom: 12 }}>{lang === 'th' ? 'การแจ้งเตือน' : 'Notifications'}</div>
               {[
-                { k: 'fall',   l: lang === 'th' ? 'ตรวจพบล้ม' : 'Fall detected',   on: true },
-                { k: 'miss',   l: lang === 'th' ? 'ขาดเซสชัน' : 'Missed sessions', on: true },
-                { k: 'low',    l: lang === 'th' ? 'คะแนนท่าต่ำ' : 'Low form score', on: true },
-                { k: 'msg',    l: lang === 'th' ? 'ข้อความผู้ป่วย' : 'Patient messages', on: true },
-                { k: 'weekly', l: lang === 'th' ? 'สรุปสัปดาห์' : 'Weekly digest',  on: false },
-              ].map((n) => (
-                <div key={n.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${DT.line}` }}>
-                  <span style={{ fontSize: 13, color: DT.ink }}>{n.l}</span>
-                  <div style={{ width: 36, height: 20, borderRadius: 999, background: n.on ? DT.brand : DT.surface3, position: 'relative', cursor: 'pointer' }}>
-                    <div style={{ position: 'absolute', top: 2, left: n.on ? 18 : 2, width: 16, height: 16, borderRadius: 999, background: '#FFFFFF', transition: 'left .15s', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }} />
+                { k: 'fall',   l: lang === 'th' ? 'ตรวจพบล้ม' : 'Fall detected' },
+                { k: 'miss',   l: lang === 'th' ? 'ขาดเซสชัน' : 'Missed sessions' },
+                { k: 'low',    l: lang === 'th' ? 'คะแนนท่าต่ำ' : 'Low form score' },
+                { k: 'msg',    l: lang === 'th' ? 'ข้อความผู้ป่วย' : 'Patient messages' },
+                { k: 'weekly', l: lang === 'th' ? 'สรุปสัปดาห์' : 'Weekly digest' },
+              ].map((n) => {
+                const on = !!notifs[n.k];
+                return (
+                  <div key={n.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${DT.line}` }}>
+                    <span style={{ fontSize: 13, color: DT.ink }}>{n.l}</span>
+                    <div role="switch" aria-checked={on} tabIndex={0} onClick={() => toggleNotif(n.k)} onKeyDown={(e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); toggleNotif(n.k); } }} style={{ width: 36, height: 20, borderRadius: 999, background: on ? DT.brand : DT.surface3, position: 'relative', cursor: 'pointer', transition: 'background .15s' }}>
+                      <div style={{ position: 'absolute', top: 2, left: on ? 18 : 2, width: 16, height: 16, borderRadius: 999, background: '#FFFFFF', transition: 'left .15s', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }} />
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
           <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
@@ -1697,15 +1705,25 @@ function ScreenDashboard() {
               <div style={{ fontSize: 11, letterSpacing: 0.8, color: DT.ink3, textTransform: 'uppercase', fontWeight: 600, marginBottom: 12 }}>{lang === 'th' ? 'ภาษา & เขตเวลา' : 'Language & timezone'}</div>
               <div style={{ marginBottom: 12 }}>
                 <div style={{ fontSize: 12, color: DT.ink2, marginBottom: 6 }}>{lang === 'th' ? 'ภาษา' : 'Language'}</div>
-                <div style={{ display: 'flex', gap: 6 }}>
-                  {[{ k: 'en', l: 'English' }, { k: 'th', l: 'ภาษาไทย' }].map((o) => (
-                    <button key={o.k} style={{
-                      flex: 1, padding: '8px 12px', borderRadius: 8,
-                      background: lang === o.k ? DT.brand : DT.surface2,
-                      color: lang === o.k ? '#F5F1E8' : DT.ink2,
-                      border: 0, cursor: 'pointer', fontSize: 12.5, fontWeight: 600, fontFamily: DT.font.sans
-                    }}>{o.l}</button>
-                  ))}
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {[{ k: 'en', l: 'English' }, { k: 'th', l: 'ภาษาไทย' }].map((o) => {
+                    const on = lang === o.k;
+                    return (
+                      <button key={o.k} onClick={() => { if (window.physioaiSetLang) window.physioaiSetLang(o.k); }} style={{
+                        padding: '8px 14px', borderRadius: 999,
+                        background: on ? DT.brand : DT.surface,
+                        color: on ? '#F5F1E8' : DT.ink2,
+                        border: on ? 'none' : `1px solid ${DT.line}`,
+                        cursor: 'pointer', fontSize: 12.5, fontWeight: 600, fontFamily: DT.font.sans,
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        boxShadow: on ? 'none' : '0 4px 12px rgba(0,0,0,0.08)',
+                        transition: 'all .15s'
+                      }}>
+                        <Ico name="globe" size={14} color={on ? '#F5F1E8' : DT.ink2} />
+                        {o.l}
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
               <div>

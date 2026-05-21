@@ -166,11 +166,7 @@ function NavBar({ currentPath, lang, setLang }) {
         )}
       </div>
 
-      <button onClick={() => {
-        const next = lang === 'th' ? 'en' : 'th';
-        setLang(next);
-        try { localStorage.setItem('physioai.lang', next); } catch {}
-      }} style={{
+      <button onClick={() => setLang(lang === 'th' ? 'en' : 'th')} style={{
         padding: '8px 12px', borderRadius: 999,
         background: T.surface, color: T.ink2, border: `1px solid ${T.line}`,
         cursor: 'pointer', fontSize: 12.5, fontWeight: 600, fontFamily: T.font.sans,
@@ -185,12 +181,37 @@ function NavBar({ currentPath, lang, setLang }) {
   );
 }
 
-// Read persisted language; default to 'en'
+// Read persisted language; default to 'en'.
+// Subscribes to a custom event so language changes from any component (e.g. Settings view)
+// propagate to all useLangState consumers in the same page.
 function useLangState() {
-  const [lang, setLang] = React.useState(() => {
+  const [lang, setLangState] = React.useState(() => {
     try { return localStorage.getItem('physioai.lang') || 'en'; } catch { return 'en'; }
   });
+  React.useEffect(() => {
+    const onChange = (e) => {
+      const next = (e && e.detail && e.detail.lang) || (typeof localStorage !== 'undefined' && localStorage.getItem('physioai.lang')) || 'en';
+      setLangState(next);
+    };
+    window.addEventListener('physioai-lang-change', onChange);
+    window.addEventListener('storage', onChange);
+    return () => {
+      window.removeEventListener('physioai-lang-change', onChange);
+      window.removeEventListener('storage', onChange);
+    };
+  }, []);
+  const setLang = React.useCallback((next) => {
+    try { localStorage.setItem('physioai.lang', next); } catch {}
+    setLangState(next);
+    try { window.dispatchEvent(new CustomEvent('physioai-lang-change', { detail: { lang: next } })); } catch {}
+  }, []);
   return [lang, setLang];
+}
+
+// Helper anyone can call (without needing the hook) — dispatches the change event.
+function physioaiSetLang(next) {
+  try { localStorage.setItem('physioai.lang', next); } catch {}
+  try { window.dispatchEvent(new CustomEvent('physioai-lang-change', { detail: { lang: next } })); } catch {}
 }
 
 // Wrapper components
@@ -215,4 +236,4 @@ function modeHrefFromCurrentPath(currentPath, mode) {
   return up + (map[mode] || 'index.html');
 }
 
-Object.assign(window, { NavBar, BackButton, MobileShell, WebShell, useLangState, NAV_ROUTES, modeHrefFromCurrentPath });
+Object.assign(window, { NavBar, BackButton, MobileShell, WebShell, useLangState, physioaiSetLang, NAV_ROUTES, modeHrefFromCurrentPath });
