@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- PhysioAI favicon — sage-green rounded square with the bolt mark. Better legibility at 16/32px than the figure. -->
+<!-- PhysioAI favicon — body-figure mark on sage-green rounded square.
+     Stroke bumped to 2 (from 1.6) for legibility at 16/32px tab sizes. -->
 <svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" role="img" aria-label="PhysioAI">
   <rect width="24" height="24" rx="5" fill="#7FA876"/>
-  <polygon points="13,2 4,14 11,14 10,22 20,10 13,10" fill="#F5F1E8"/>
+  <g fill="none" stroke="#F5F1E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <circle cx="12" cy="4.5" r="2"/>
+    <path d="M12 6.5v6M7 9l10 0M9 12.5l-2 8M15 12.5l2 8"/>
+  </g>
 </svg>
