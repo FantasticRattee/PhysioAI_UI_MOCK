@@ -1072,6 +1072,9 @@ function ScreenDashboard() {
   const { t, lang } = useT();
   const [selected, setSelected] = React.useState('aree');
   const [phase, setPhase] = React.useState(0);
+  const [view, setView] = React.useState('patients');
+  const [alertFilter, setAlertFilter] = React.useState('all');
+  const [schedDay, setSchedDay] = React.useState(2);
   React.useEffect(() => {
     let raf,t0 = performance.now();
     const tick = (now) => {
@@ -1168,19 +1171,21 @@ function ScreenDashboard() {
           <div style={{ fontSize: 15, fontWeight: 600, color: DT.ink, letterSpacing: -0.2 }}>{t.appName}</div>
         </div>
         {[
-        { i: 'home',  l: lang === 'th' ? 'ภาพรวม' : 'Overview',  on: false },
-        { i: 'users', l: t.patients, on: true, badge: freshCount > 0 ? freshCount : null, badgeLabel: lang === 'th' ? 'ใหม่' : 'new' },
-        { i: 'chart', l: lang === 'th' ? 'วิเคราะห์' : 'Analytics', on: false },
-        { i: 'cal',   l: lang === 'th' ? 'นัดหมาย' : 'Schedule',   on: false },
-        { i: 'bell',  l: t.alerts, on: false, badge: totalAlerts },
-        { i: 'set',   l: t.settings, on: false }
-        ].map((item) =>
-        <div key={item.l} style={{
-          display: 'flex', alignItems: 'center', gap: 10,
-          padding: '9px 10px', borderRadius: 8, cursor: 'pointer',
-          background: item.on ? DT.brandSoft : 'transparent',
-          color: item.on ? DT.brand : DT.ink2, fontSize: 13, fontWeight: item.on ? 600 : 500
-        }}>
+        { key: 'overview',  i: 'home',  l: lang === 'th' ? 'ภาพรวม' : 'Overview' },
+        { key: 'patients',  i: 'users', l: t.patients, badge: freshCount > 0 ? freshCount : null, badgeLabel: lang === 'th' ? 'ใหม่' : 'new' },
+        { key: 'analytics', i: 'chart', l: lang === 'th' ? 'วิเคราะห์' : 'Analytics' },
+        { key: 'schedule',  i: 'cal',   l: lang === 'th' ? 'นัดหมาย' : 'Schedule' },
+        { key: 'alerts',    i: 'bell',  l: t.alerts, badge: totalAlerts },
+        { key: 'settings',  i: 'set',   l: t.settings }
+        ].map((item) => {
+          const on = view === item.key;
+          return (
+          <div key={item.key} onClick={() => setView(item.key)} style={{
+            display: 'flex', alignItems: 'center', gap: 10,
+            padding: '9px 10px', borderRadius: 8, cursor: 'pointer',
+            background: on ? DT.brandSoft : 'transparent',
+            color: on ? DT.brand : DT.ink2, fontSize: 13, fontWeight: on ? 600 : 500
+          }}>
             <Ico name={item.i} size={16} />
             <span style={{ flex: 1 }}>{item.l}</span>
             {item.badge && <span style={{
@@ -1188,8 +1193,9 @@ function ScreenDashboard() {
             color: '#F5F1E8', fontSize: 10, fontWeight: 700,
             padding: '1px 6px', borderRadius: 999
           }}>{item.badge}{item.badgeLabel ? ' ' + item.badgeLabel : ''}</span>}
-          </div>
-        )}
+          </div>);
+
+        })}
         <div style={{ marginTop: 'auto', padding: 10, borderRadius: 10, background: DT.surface, display: 'flex', alignItems: 'center', gap: 10, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
           <div style={{ width: 30, height: 30, borderRadius: 999, background: 'linear-gradient(135deg, #52704A, #7FA876)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F5F1E8', fontWeight: 700, fontSize: 13 }}>PS</div>
           <div style={{ flex: 1, minWidth: 0 }}>
@@ -1201,7 +1207,8 @@ function ScreenDashboard() {
         </div>
       </div>
 
-      {/* Patient list column */}
+      {/* Patient list column — only shown on Patients view */}
+      {view === 'patients' && (
       <div className="dash-patient-list" style={{ width: 320, background: '#FFFFFF', boxShadow: `inset -1px 0 0 ${DT.line}`, display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '18px 18px 12px' }}>
           <div style={{ fontSize: 11, letterSpacing: 1, color: DT.ink3, textTransform: 'uppercase' }}>{t.patients}</div>
@@ -1283,8 +1290,446 @@ function ScreenDashboard() {
         </div>
       </div>
 
+      )}
+
       {/* Main content */}
       <div className="dash-main" style={{ flex: 1, padding: 24, overflow: 'auto' }}>
+        {/* ─── OVERVIEW VIEW ─── */}
+        {view === 'overview' && (
+        <React.Fragment>
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 24, fontWeight: 600, color: DT.ink, letterSpacing: -0.4 }}>{lang === 'th' ? 'ภาพรวม' : 'Overview'}</div>
+            <div style={{ fontSize: 12.5, color: DT.ink3, marginTop: 4 }}>{lang === 'th' ? 'สถานะคลินิกวันนี้' : 'Practice snapshot · today'}</div>
+          </div>
+          <div className="dash-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+            {[
+              { l: lang === 'th' ? 'ผู้ป่วยทั้งหมด' : 'Total patients', v: patients.length, sub: '+2 ' + (lang === 'th' ? 'สัปดาห์นี้' : 'this week'), tone: DT.brand },
+              { l: lang === 'th' ? 'เซสชันสัปดาห์นี้' : 'Sessions this week', v: 23, sub: '↑ 18% ' + (lang === 'th' ? 'จากสัปดาห์ก่อน' : 'vs last'), tone: DT.good },
+              { l: lang === 'th' ? 'คะแนนเฉลี่ย' : 'Avg form score', v: '84', sub: lang === 'th' ? 'ทุกผู้ป่วย' : 'across all', tone: DT.good },
+              { l: lang === 'th' ? 'แจ้งเตือนค้าง' : 'Open alerts', v: totalAlerts, sub: lang === 'th' ? 'ต้องดู' : 'need attention', tone: DT.warn },
+            ].map((k) => (
+              <div key={k.l} style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+                <div style={{ fontSize: 10.5, letterSpacing: 0.6, color: DT.ink3, textTransform: 'uppercase' }}>{k.l}</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: DT.ink, letterSpacing: -0.4, marginTop: 6 }}>{k.v}</div>
+                <div style={{ fontSize: 10.5, color: k.tone, marginTop: 3, fontWeight: 500 }}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1.4fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink, marginBottom: 12 }}>{lang === 'th' ? 'ผู้ป่วยตามโหมด' : 'Patients by accessibility mode'}</div>
+              {Object.keys(MODE_META).map((m) => {
+                const count = patients.filter((p) => p.mode === m).length;
+                const pct = count / patients.length * 100;
+                const mm = MODE_META[m];
+                return (
+                  <div key={m} style={{ display: 'grid', gridTemplateColumns: '120px 1fr 30px', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                    <div style={{ fontSize: 12, color: DT.ink2, display: 'flex', alignItems: 'center', gap: 6 }}>
+                      <Ico name={mm.icon} size={11} color={mm.color} />
+                      {lang === 'th' ? mm.th : mm.en}
+                    </div>
+                    <div style={{ height: 6, borderRadius: 3, background: 'rgba(60,48,30,0.08)', overflow: 'hidden' }}>
+                      <div style={{ width: `${pct}%`, height: '100%', background: mm.color, borderRadius: 3 }} />
+                    </div>
+                    <div style={{ fontSize: 12, color: DT.ink, fontFamily: DT.font.mono, textAlign: 'right' }}>{count}</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink, marginBottom: 12 }}>{lang === 'th' ? 'กิจกรรมล่าสุด' : 'Recent activity'}</div>
+              {[
+                { who: 'Aree S.', whoTh: 'อารีย์ ส.', act: lang === 'th' ? 'จบเซสชันยกแขน' : 'completed shoulder flexion', when: '23m', score: 91 },
+                { who: 'Somchai T.', whoTh: 'สมชาย ท.', act: lang === 'th' ? 'ส่งเซสชันใหม่' : 'pushed new session', when: '2h', score: 84 },
+                { who: 'Pim O.', whoTh: 'พิม อ.', act: lang === 'th' ? 'ตรวจพบล้ม' : 'fall detected', when: '5h', tone: 'bad' },
+                { who: 'Malee J.', whoTh: 'มาลี จ.', act: lang === 'th' ? 'จบโปรแกรมวัน' : 'finished daily program', when: '8h', score: 92 },
+                { who: 'Noi P.', whoTh: 'น้อย พ.', act: lang === 'th' ? 'ผู้ดูแลเขียนโน้ต' : 'caregiver added note', when: '1d' },
+              ].map((a, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 0', borderBottom: i < 4 ? `1px solid ${DT.line}` : 'none' }}>
+                  <div style={{ width: 6, height: 6, borderRadius: 3, background: a.tone === 'bad' ? DT.bad : a.score && a.score >= 85 ? DT.good : DT.brand, flexShrink: 0 }} />
+                  <div style={{ flex: 1, fontSize: 12, color: DT.ink }}>
+                    <span style={{ fontWeight: 600 }}>{lang === 'th' ? a.whoTh : a.who}</span>{' '}
+                    <span style={{ color: DT.ink2 }}>{a.act}</span>
+                  </div>
+                  {a.score && <Pill tone={a.score >= 85 ? 'good' : 'warn'} size="sm">{a.score}</Pill>}
+                  <div style={{ fontSize: 10.5, color: DT.ink3, fontFamily: DT.font.mono }}>{a.when}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink, marginBottom: 12 }}>{lang === 'th' ? 'อันดับต้น' : 'Top performers'}</div>
+              {patients.slice().sort((a, b) => b.score - a.score).slice(0, 3).map((p) => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${DT.line}` }}>
+                  <Ring value={p.score / 100} size={36} thickness={3.5} color={DT.good} fontSize={11}>{p.score}</Ring>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12.5, color: DT.ink, fontWeight: 600 }}>{lang === 'th' ? p.nameTh : p.name}</div>
+                    <div style={{ fontSize: 11, color: DT.ink3 }}>{lang === 'th' ? p.condTh : p.cond}</div>
+                  </div>
+                  <Pill tone="good" size="sm">{p.adh}%</Pill>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink, marginBottom: 12 }}>{lang === 'th' ? 'ต้องดูแลเป็นพิเศษ' : 'Needs attention'}</div>
+              {patients.filter((p) => p.alerts.length > 0 || p.adh < 70).slice(0, 3).map((p) => (
+                <div key={p.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: `1px solid ${DT.line}` }}>
+                  <div style={{ width: 36, height: 36, borderRadius: 999, background: MODE_META[p.mode].color, color: '#F5F1E8', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700 }}>
+                    {p.name.split(' ').map((x) => x[0]).join('')}
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 12.5, color: DT.ink, fontWeight: 600 }}>{lang === 'th' ? p.nameTh : p.name}</div>
+                    <div style={{ fontSize: 11, color: DT.ink3 }}>
+                      {p.alerts.length > 0 ? (lang === 'th' ? `${p.alerts.length} แจ้งเตือน` : `${p.alerts.length} alert${p.alerts.length > 1 ? 's' : ''}`) : (lang === 'th' ? 'การทำต่อเนื่องต่ำ' : 'Low adherence')}
+                    </div>
+                  </div>
+                  <Pill tone={p.adh < 70 ? 'bad' : 'warn'} size="sm">{p.adh}%</Pill>
+                </div>
+              ))}
+            </div>
+          </div>
+        </React.Fragment>
+        )}
+
+        {/* ─── ANALYTICS VIEW ─── */}
+        {view === 'analytics' && (
+        <React.Fragment>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 24, fontWeight: 600, color: DT.ink, letterSpacing: -0.4 }}>{lang === 'th' ? 'วิเคราะห์' : 'Analytics'}</div>
+              <div style={{ fontSize: 12.5, color: DT.ink3, marginTop: 4 }}>{lang === 'th' ? 'แนวโน้มผลลัพธ์การรักษา' : 'Treatment outcome trends'}</div>
+            </div>
+            <div style={{ display: 'inline-flex', padding: 4, gap: 4, background: DT.surface2, borderRadius: 999 }}>
+              {[{ k: 'week', l: lang === 'th' ? 'สัปดาห์' : 'Week' }, { k: 'month', l: lang === 'th' ? 'เดือน' : 'Month', on: true }, { k: 'year', l: lang === 'th' ? 'ปี' : 'Year' }].map((p) => (
+                <button key={p.k} style={{ padding: '6px 14px', borderRadius: 999, border: 0, cursor: 'pointer', background: p.on ? DT.surface : 'transparent', color: p.on ? DT.ink : DT.ink2, fontSize: 12.5, fontWeight: p.on ? 600 : 500, fontFamily: DT.font.sans }}>{p.l}</button>
+              ))}
+            </div>
+          </div>
+          <div className="dash-kpi" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 16 }}>
+            {[
+              { l: lang === 'th' ? 'อัตราจบโปรแกรม' : 'Program completion', v: '78%', sub: '↑ 6%', tone: DT.good },
+              { l: lang === 'th' ? 'อัตราหลุดออก' : 'Dropout rate', v: '9%', sub: '↓ 2%', tone: DT.good },
+              { l: lang === 'th' ? 'เวลาเซสชันเฉลี่ย' : 'Avg session', v: '12.4m', sub: lang === 'th' ? 'คงที่' : 'stable', tone: DT.ink2 },
+              { l: lang === 'th' ? 'เซสชันเดือนนี้' : 'Sessions this month', v: 142, sub: '↑ 23', tone: DT.good },
+            ].map((k) => (
+              <div key={k.l} style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+                <div style={{ fontSize: 10.5, letterSpacing: 0.6, color: DT.ink3, textTransform: 'uppercase' }}>{k.l}</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: DT.ink, letterSpacing: -0.4, marginTop: 6 }}>{k.v}</div>
+                <div style={{ fontSize: 10.5, color: k.tone, marginTop: 3, fontWeight: 500 }}>{k.sub}</div>
+              </div>
+            ))}
+          </div>
+          <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}`, marginBottom: 14 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink }}>{lang === 'th' ? 'แนวโน้มคะแนนท่า (12 สัปดาห์)' : 'Form score trend (12 weeks)'}</div>
+              <Pill tone="good" size="sm">↑ {lang === 'th' ? 'ดีขึ้น' : 'Improving'}</Pill>
+            </div>
+            <Spark points={sessionsSpark} color={DT.brand} width={800} height={120} />
+          </div>
+          <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink, marginBottom: 12 }}>{lang === 'th' ? 'ความต่อเนื่องตามโหมด' : 'Adherence by mode'}</div>
+              {Object.keys(MODE_META).map((m) => {
+                const ps = patients.filter((p) => p.mode === m);
+                const avg = ps.length ? Math.round(ps.reduce((a, p) => a + p.adh, 0) / ps.length) : 0;
+                const mm = MODE_META[m];
+                return (
+                  <div key={m} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 40px', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                    <div style={{ fontSize: 12, color: DT.ink2 }}>{lang === 'th' ? mm.th : mm.en}</div>
+                    <div style={{ height: 6, borderRadius: 3, background: 'rgba(60,48,30,0.08)', overflow: 'hidden' }}>
+                      <div style={{ width: `${avg}%`, height: '100%', background: avg >= 80 ? DT.good : avg >= 60 ? DT.warn : DT.bad, borderRadius: 3 }} />
+                    </div>
+                    <div style={{ fontSize: 12, color: DT.ink, fontFamily: DT.font.mono, textAlign: 'right' }}>{avg}%</div>
+                  </div>
+                );
+              })}
+            </div>
+            <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink, marginBottom: 12 }}>{lang === 'th' ? 'ท่าที่ใช้บ่อย' : 'Top exercises'}</div>
+              {[
+                { k: 'shoulder', count: 34 },
+                { k: 'knee', count: 28 },
+                { k: 'squat', count: 21 },
+                { k: 'hip', count: 15 },
+                { k: 'balance', count: 12 },
+              ].map((e) => (
+                <div key={e.k} style={{ display: 'grid', gridTemplateColumns: '110px 1fr 32px', alignItems: 'center', gap: 10, marginBottom: 8 }}>
+                  <div style={{ fontSize: 12, color: DT.ink2 }}>{t.ex[e.k]}</div>
+                  <div style={{ height: 6, borderRadius: 3, background: 'rgba(60,48,30,0.08)', overflow: 'hidden' }}>
+                    <div style={{ width: `${(e.count / 34) * 100}%`, height: '100%', background: DT.brand, borderRadius: 3 }} />
+                  </div>
+                  <div style={{ fontSize: 12, color: DT.ink, fontFamily: DT.font.mono, textAlign: 'right' }}>{e.count}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </React.Fragment>
+        )}
+
+        {/* ─── SCHEDULE VIEW ─── */}
+        {view === 'schedule' && (
+        <React.Fragment>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 18, flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 24, fontWeight: 600, color: DT.ink, letterSpacing: -0.4 }}>{lang === 'th' ? 'นัดหมาย' : 'Schedule'}</div>
+              <div style={{ fontSize: 12.5, color: DT.ink3, marginTop: 4 }}>{lang === 'th' ? 'สัปดาห์นี้ · 20–24 พฤษภาคม' : 'This week · May 20–24'}</div>
+            </div>
+            <button style={{ padding: '9px 14px', background: DT.brand, color: '#F5F1E8', border: 0, borderRadius: 10, fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Ico name="plus" size={14} color="#F5F1E8" /> {lang === 'th' ? 'เพิ่มนัด' : 'Add session'}
+            </button>
+          </div>
+          <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}`, marginBottom: 14 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: 8 }}>
+              {['Mon 20', 'Tue 21', 'Wed 22', 'Thu 23', 'Fri 24'].map((d, i) => {
+                const dayTh = ['จ. 20', 'อ. 21', 'พ. 22', 'พฤ. 23', 'ศ. 24'][i];
+                const isToday = i === 2;
+                const sessions = [
+                  [{ time: '09:00', name: 'Aree S.', nameTh: 'อารีย์ ส.', ex: 'shoulder' }, { time: '11:00', name: 'Anan V.', nameTh: 'อนันต์ ว.', ex: 'knee' }],
+                  [{ time: '10:30', name: 'Somchai T.', nameTh: 'สมชาย ท.', ex: 'shoulder' }],
+                  [{ time: '09:30', name: 'Malee J.', nameTh: 'มาลี จ.', ex: 'hip' }, { time: '14:00', name: 'Aree S.', nameTh: 'อารีย์ ส.', ex: 'knee' }, { time: '16:00', name: 'Pim O.', nameTh: 'พิม อ.', ex: 'shoulder' }],
+                  [{ time: '11:00', name: 'Noi P.', nameTh: 'น้อย พ.', ex: 'balance' }],
+                  [{ time: '09:00', name: 'Kwan R.', nameTh: 'ขวัญ ร.', ex: 'hip' }, { time: '13:30', name: 'Anan V.', nameTh: 'อนันต์ ว.', ex: 'knee' }],
+                ][i];
+                return (
+                  <div key={d} style={{ padding: 10, borderRadius: 10, background: isToday ? DT.brandSoft : '#FAF6EC', boxShadow: `inset 0 0 0 1px ${isToday ? DT.brand : DT.line}`, minHeight: 200 }}>
+                    <div style={{ fontSize: 11, letterSpacing: 0.4, color: isToday ? DT.brand : DT.ink3, textTransform: 'uppercase', fontWeight: 600, marginBottom: 8 }}>{lang === 'th' ? dayTh : d}{isToday ? ' · ' + (lang === 'th' ? 'วันนี้' : 'today') : ''}</div>
+                    {sessions.map((s, j) => (
+                      <div key={j} style={{ padding: '6px 8px', borderRadius: 8, background: DT.surface, marginBottom: 5, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+                        <div style={{ fontSize: 10.5, color: DT.brand, fontWeight: 700, fontFamily: DT.font.mono }}>{s.time}</div>
+                        <div style={{ fontSize: 11.5, color: DT.ink, fontWeight: 500, marginTop: 1 }}>{lang === 'th' ? s.nameTh : s.name}</div>
+                        <div style={{ fontSize: 10, color: DT.ink3, marginTop: 1 }}>{t.ex[s.ex]}</div>
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+          <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+            <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink, marginBottom: 12 }}>{lang === 'th' ? 'นัดถัดไป' : 'Upcoming'}</div>
+              {[
+                { time: '14:00', day: lang === 'th' ? 'วันนี้' : 'Today', name: 'Aree S.', nameTh: 'อารีย์ ส.', mode: 'standard' },
+                { time: '16:00', day: lang === 'th' ? 'วันนี้' : 'Today', name: 'Pim O.', nameTh: 'พิม อ.', mode: 'audio_only' },
+                { time: '11:00', day: lang === 'th' ? 'พรุ่งนี้' : 'Tomorrow', name: 'Noi P.', nameTh: 'น้อย พ.', mode: 'caregiver' },
+              ].map((u, i) => (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 0', borderBottom: i < 2 ? `1px solid ${DT.line}` : 'none' }}>
+                  <div style={{ width: 50, textAlign: 'center' }}>
+                    <div style={{ fontSize: 13, color: DT.brand, fontWeight: 700, fontFamily: DT.font.mono }}>{u.time}</div>
+                    <div style={{ fontSize: 10, color: DT.ink3 }}>{u.day}</div>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontSize: 13, color: DT.ink, fontWeight: 500 }}>{lang === 'th' ? u.nameTh : u.name}</div>
+                    <div style={{ fontSize: 10.5, color: MODE_META[u.mode].color, display: 'flex', alignItems: 'center', gap: 4, marginTop: 1 }}>
+                      <Ico name={MODE_META[u.mode].icon} size={10} color={MODE_META[u.mode].color} />
+                      {lang === 'th' ? MODE_META[u.mode].th : MODE_META[u.mode].en}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: 14, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: DT.ink, marginBottom: 12 }}>{lang === 'th' ? 'สรุปสัปดาห์' : 'Week summary'}</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${DT.line}` }}>
+                <span style={{ fontSize: 12, color: DT.ink2 }}>{lang === 'th' ? 'จำนวนเซสชัน' : 'Total sessions'}</span>
+                <span style={{ fontSize: 13, color: DT.ink, fontFamily: DT.font.mono, fontWeight: 600 }}>9</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${DT.line}` }}>
+                <span style={{ fontSize: 12, color: DT.ink2 }}>{lang === 'th' ? 'ผู้ป่วยที่นัด' : 'Unique patients'}</span>
+                <span style={{ fontSize: 13, color: DT.ink, fontFamily: DT.font.mono, fontWeight: 600 }}>7</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${DT.line}` }}>
+                <span style={{ fontSize: 12, color: DT.ink2 }}>{lang === 'th' ? 'ช่วงเวลายอดนิยม' : 'Peak hour'}</span>
+                <span style={{ fontSize: 13, color: DT.ink, fontFamily: DT.font.mono, fontWeight: 600 }}>09:00–11:00</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0' }}>
+                <span style={{ fontSize: 12, color: DT.ink2 }}>{lang === 'th' ? 'ช่วงว่าง' : 'Available slots'}</span>
+                <span style={{ fontSize: 13, color: DT.good, fontFamily: DT.font.mono, fontWeight: 600 }}>11</span>
+              </div>
+            </div>
+          </div>
+        </React.Fragment>
+        )}
+
+        {/* ─── ALERTS VIEW ─── */}
+        {view === 'alerts' && (
+        <React.Fragment>
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 24, fontWeight: 600, color: DT.ink, letterSpacing: -0.4 }}>{lang === 'th' ? 'แจ้งเตือนทั้งหมด' : 'Alerts'}</div>
+            <div style={{ fontSize: 12.5, color: DT.ink3, marginTop: 4 }}>{lang === 'th' ? `${totalAlerts} แจ้งเตือนทั้งคลินิก` : `${totalAlerts} alerts across all patients`}</div>
+          </div>
+          <div style={{ display: 'flex', gap: 6, marginBottom: 14, flexWrap: 'wrap' }}>
+            {[
+              { k: 'all', l: lang === 'th' ? 'ทั้งหมด' : 'All' },
+              { k: 'fall', l: lang === 'th' ? 'ล้ม' : 'Fall' },
+              { k: 'miss', l: lang === 'th' ? 'ขาด' : 'Miss' },
+              { k: 'low_score', l: lang === 'th' ? 'คะแนนต่ำ' : 'Low score' },
+              { k: 'message', l: lang === 'th' ? 'ข้อความ' : 'Messages' },
+            ].map((f) => {
+              const on = alertFilter === f.k;
+              return (
+                <button key={f.k} onClick={() => setAlertFilter(f.k)} style={{
+                  padding: '7px 14px', borderRadius: 999, border: 0, cursor: 'pointer',
+                  background: on ? DT.brand : DT.surface, color: on ? '#F5F1E8' : DT.ink2,
+                  fontSize: 12, fontWeight: 600, fontFamily: DT.font.sans,
+                  boxShadow: on ? 'none' : `inset 0 0 0 1px ${DT.line}`
+                }}>{f.l}</button>
+              );
+            })}
+          </div>
+          <div style={{ padding: 0, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}`, overflow: 'hidden' }}>
+            {patients.flatMap((p) =>
+              p.alerts.map((a) => ({ ...a, patient: p, time: ['5m', '23m', '1h', '4h', '8h', '1d'][Math.floor(Math.random() * 6)] }))
+            ).filter((a) => alertFilter === 'all' || a.type === alertFilter).map((a, i, arr) => {
+              const meta = ALERT_META[a.type];
+              const pn = lang === 'th' ? a.patient.nameTh : a.patient.name;
+              return (
+                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '14px 16px', borderBottom: i < arr.length - 1 ? `1px solid ${DT.line}` : 'none' }}>
+                  <div style={{
+                    width: 36, height: 36, borderRadius: 10,
+                    background: meta.tone === 'bad' ? 'rgba(184,108,90,0.14)' : meta.tone === 'warn' ? 'rgba(200,149,90,0.14)' : DT.brandSoft,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0
+                  }}>
+                    <Ico name={meta.icon} size={16} color={meta.tone === 'bad' ? DT.bad : meta.tone === 'warn' ? DT.warn : DT.brand} />
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: 13, color: DT.ink, fontWeight: 600 }}>{lang === 'th' ? meta.th : meta.en}</span>
+                      <span style={{ fontSize: 11.5, color: DT.ink3 }}>·</span>
+                      <span style={{ fontSize: 12.5, color: DT.ink2, fontWeight: 500 }}>{pn}</span>
+                    </div>
+                    <div style={{ fontSize: 11.5, color: DT.ink3, marginTop: 2 }}>{a.detail}</div>
+                  </div>
+                  <div style={{ fontSize: 11, color: DT.ink3, fontFamily: DT.font.mono }}>{a.time} {lang === 'th' ? 'ที่แล้ว' : 'ago'}</div>
+                  <button style={{ padding: '6px 10px', borderRadius: 8, background: DT.surface2, color: DT.ink2, border: 0, cursor: 'pointer', fontSize: 11.5, fontWeight: 500 }}>
+                    {lang === 'th' ? 'ดู' : 'View'}
+                  </button>
+                  <button style={{ padding: '6px 10px', borderRadius: 8, background: 'transparent', color: DT.ink3, border: 0, cursor: 'pointer', fontSize: 11.5 }}>
+                    <Ico name="close" size={12} color={DT.ink3} />
+                  </button>
+                </div>
+              );
+            })}
+            {totalAlerts === 0 && (
+              <div style={{ padding: 40, textAlign: 'center', color: DT.ink3 }}>
+                <Ico name="check" size={32} color={DT.good} />
+                <div style={{ marginTop: 8, fontSize: 13 }}>{lang === 'th' ? 'ไม่มีแจ้งเตือน' : 'All clear'}</div>
+              </div>
+            )}
+          </div>
+        </React.Fragment>
+        )}
+
+        {/* ─── SETTINGS VIEW ─── */}
+        {view === 'settings' && (
+        <React.Fragment>
+          <div style={{ marginBottom: 18 }}>
+            <div style={{ fontSize: 24, fontWeight: 600, color: DT.ink, letterSpacing: -0.4 }}>{lang === 'th' ? 'ตั้งค่า' : 'Settings'}</div>
+            <div style={{ fontSize: 12.5, color: DT.ink3, marginTop: 4 }}>{lang === 'th' ? 'การตั้งค่าผู้ใช้และค่าเริ่มต้นคลินิก' : 'Account & clinic-wide defaults'}</div>
+          </div>
+          <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div style={{ padding: 16, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.8, color: DT.ink3, textTransform: 'uppercase', fontWeight: 600, marginBottom: 12 }}>{lang === 'th' ? 'โปรไฟล์' : 'Profile'}</div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 14, marginBottom: 12 }}>
+                <div style={{ width: 56, height: 56, borderRadius: 999, background: 'linear-gradient(135deg, #52704A, #7FA876)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#F5F1E8', fontWeight: 700, fontSize: 18 }}>PS</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 15, fontWeight: 600, color: DT.ink }}>Dr. Ploy S.</div>
+                  <div style={{ fontSize: 12, color: DT.ink3 }}>{lang === 'th' ? 'นักกายภาพบำบัด · ใบประกอบวิชาชีพ PT-2018-3142' : 'Physiotherapist · License PT-2018-3142'}</div>
+                </div>
+                <button style={{ padding: '6px 12px', borderRadius: 8, background: DT.surface2, color: DT.ink, border: `1px solid ${DT.line}`, cursor: 'pointer', fontSize: 12, fontWeight: 500 }}>{lang === 'th' ? 'แก้ไข' : 'Edit'}</button>
+              </div>
+              {[
+                { l: lang === 'th' ? 'อีเมล' : 'Email', v: 'ploy.s@clinic.co.th' },
+                { l: lang === 'th' ? 'คลินิก' : 'Clinic', v: 'Bangkok Rehab Center' },
+                { l: lang === 'th' ? 'เขตรับผิดชอบ' : 'Specialty', v: lang === 'th' ? 'หลังผ่าตัด, ระบบประสาท' : 'Post-op, Neuro' },
+              ].map((r) => (
+                <div key={r.l} style={{ display: 'flex', justifyContent: 'space-between', padding: '7px 0', borderTop: `1px solid ${DT.line}` }}>
+                  <span style={{ fontSize: 12, color: DT.ink3 }}>{r.l}</span>
+                  <span style={{ fontSize: 12.5, color: DT.ink }}>{r.v}</span>
+                </div>
+              ))}
+            </div>
+            <div style={{ padding: 16, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.8, color: DT.ink3, textTransform: 'uppercase', fontWeight: 600, marginBottom: 12 }}>{lang === 'th' ? 'การแจ้งเตือน' : 'Notifications'}</div>
+              {[
+                { k: 'fall',   l: lang === 'th' ? 'ตรวจพบล้ม' : 'Fall detected',   on: true },
+                { k: 'miss',   l: lang === 'th' ? 'ขาดเซสชัน' : 'Missed sessions', on: true },
+                { k: 'low',    l: lang === 'th' ? 'คะแนนท่าต่ำ' : 'Low form score', on: true },
+                { k: 'msg',    l: lang === 'th' ? 'ข้อความผู้ป่วย' : 'Patient messages', on: true },
+                { k: 'weekly', l: lang === 'th' ? 'สรุปสัปดาห์' : 'Weekly digest',  on: false },
+              ].map((n) => (
+                <div key={n.k} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: `1px solid ${DT.line}` }}>
+                  <span style={{ fontSize: 13, color: DT.ink }}>{n.l}</span>
+                  <div style={{ width: 36, height: 20, borderRadius: 999, background: n.on ? DT.brand : DT.surface3, position: 'relative', cursor: 'pointer' }}>
+                    <div style={{ position: 'absolute', top: 2, left: n.on ? 18 : 2, width: 16, height: 16, borderRadius: 999, background: '#FFFFFF', transition: 'left .15s', boxShadow: '0 1px 2px rgba(0,0,0,0.15)' }} />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="dash-grid-2" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 14 }}>
+            <div style={{ padding: 16, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.8, color: DT.ink3, textTransform: 'uppercase', fontWeight: 600, marginBottom: 12 }}>{lang === 'th' ? 'ค่าเริ่มต้นเซสชัน' : 'Session defaults'}</div>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, color: DT.ink2 }}>{lang === 'th' ? 'ความคลาดเคลื่อนข้อต่อ' : 'Joint angle tolerance'}</span>
+                  <span style={{ fontSize: 12.5, color: DT.brand, fontFamily: DT.font.mono, fontWeight: 600 }}>±15°</span>
+                </div>
+                <div style={{ position: 'relative', height: 16, display: 'flex', alignItems: 'center' }}>
+                  <div style={{ position: 'absolute', left: 0, right: 0, height: 4, borderRadius: 4, background: 'rgba(60,48,30,0.10)' }} />
+                  <div style={{ position: 'absolute', left: 0, width: '50%', height: 4, borderRadius: 4, background: DT.brand }} />
+                  <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: 999, background: DT.brand, boxShadow: `0 0 0 2px ${DT.surface}` }} />
+                </div>
+              </div>
+              <div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
+                  <span style={{ fontSize: 12, color: DT.ink2 }}>{lang === 'th' ? 'รุ่นโมเดล AI' : 'AI model variant'}</span>
+                </div>
+                <select style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${DT.line}`, background: DT.surface2, fontSize: 12.5, color: DT.ink, fontFamily: DT.font.sans }}>
+                  <option>Lite ({lang === 'th' ? 'เร็ว' : 'fast'})</option>
+                  <option>Full ({lang === 'th' ? 'สมดุล' : 'balanced'})</option>
+                  <option>Heavy ({lang === 'th' ? 'แม่นยำ' : 'accurate'})</option>
+                </select>
+              </div>
+            </div>
+            <div style={{ padding: 16, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}` }}>
+              <div style={{ fontSize: 11, letterSpacing: 0.8, color: DT.ink3, textTransform: 'uppercase', fontWeight: 600, marginBottom: 12 }}>{lang === 'th' ? 'ภาษา & เขตเวลา' : 'Language & timezone'}</div>
+              <div style={{ marginBottom: 12 }}>
+                <div style={{ fontSize: 12, color: DT.ink2, marginBottom: 6 }}>{lang === 'th' ? 'ภาษา' : 'Language'}</div>
+                <div style={{ display: 'flex', gap: 6 }}>
+                  {[{ k: 'en', l: 'English' }, { k: 'th', l: 'ภาษาไทย' }].map((o) => (
+                    <button key={o.k} style={{
+                      flex: 1, padding: '8px 12px', borderRadius: 8,
+                      background: lang === o.k ? DT.brand : DT.surface2,
+                      color: lang === o.k ? '#F5F1E8' : DT.ink2,
+                      border: 0, cursor: 'pointer', fontSize: 12.5, fontWeight: 600, fontFamily: DT.font.sans
+                    }}>{o.l}</button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div style={{ fontSize: 12, color: DT.ink2, marginBottom: 6 }}>{lang === 'th' ? 'เขตเวลา' : 'Timezone'}</div>
+                <select style={{ width: '100%', padding: '8px 10px', borderRadius: 8, border: `1px solid ${DT.line}`, background: DT.surface2, fontSize: 12.5, color: DT.ink, fontFamily: DT.font.sans }}>
+                  <option>Asia/Bangkok (GMT+7)</option>
+                  <option>UTC</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div style={{ padding: 16, background: DT.surface, borderRadius: 14, boxShadow: `inset 0 0 0 1px ${DT.line}`, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 12 }}>
+            <div>
+              <div style={{ fontSize: 13, color: DT.ink, fontWeight: 600 }}>{lang === 'th' ? 'ออกจากระบบ' : 'Sign out'}</div>
+              <div style={{ fontSize: 11.5, color: DT.ink3, marginTop: 2 }}>{lang === 'th' ? 'คุณจะถูกออกจากระบบทุกอุปกรณ์' : 'You will be signed out on all devices'}</div>
+            </div>
+            <button style={{ padding: '9px 16px', borderRadius: 10, background: 'rgba(184,108,90,0.10)', color: DT.bad, border: `1px solid rgba(184,108,90,0.30)`, cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>{lang === 'th' ? 'ออกจากระบบ' : 'Sign out'}</button>
+          </div>
+        </React.Fragment>
+        )}
+
+        {/* ─── PATIENTS VIEW (existing dashboard content) ─── */}
+        {view === 'patients' && (
+        <React.Fragment>
         {/* Header with mode + category + caregiver */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 18 }}>
           <div style={{ flex: 1 }}>
@@ -1830,6 +2275,8 @@ function ScreenDashboard() {
             </button>
           </div>
         </div>
+        </React.Fragment>
+        )}
       </div>
     </div>);
 
