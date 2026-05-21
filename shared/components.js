@@ -1077,6 +1077,34 @@ function ScreenDashboard() {
   const [schedDay, setSchedDay] = React.useState(2);
   const [notifs, setNotifs] = React.useState({ fall: true, miss: true, low: true, msg: true, weekly: false });
   const toggleNotif = (k) => setNotifs((prev) => ({ ...prev, [k]: !prev[k] }));
+  // Draggable joint-angle tolerance slider (range 5–30°)
+  const [tolerance, setTolerance] = React.useState(15);
+  const sliderRef = React.useRef(null);
+  const [dragging, setDragging] = React.useState(false);
+  const updateToleranceFromX = (clientX) => {
+    const el = sliderRef.current;
+    if (!el) return;
+    const rect = el.getBoundingClientRect();
+    const ratio = Math.min(1, Math.max(0, (clientX - rect.left) / rect.width));
+    setTolerance(Math.round(5 + ratio * 25));
+  };
+  React.useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e) => {
+      e.preventDefault();
+      const x = e.clientX ?? (e.touches && e.touches[0] && e.touches[0].clientX);
+      if (x != null) updateToleranceFromX(x);
+    };
+    const onUp = () => setDragging(false);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onUp);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onUp);
+    };
+  }, [dragging]);
   React.useEffect(() => {
     let raf,t0 = performance.now();
     const tick = (now) => {
@@ -1156,7 +1184,7 @@ function ScreenDashboard() {
   }
 
   return (
-    <div className="dash-outer" style={{ display: 'flex', height: '100%', background: DT.bg }}>
+    <div className="dash-outer" style={{ display: 'flex', minHeight: 'calc(100vh - 64px)', background: DT.bg }}>
       {/* Sidebar */}
       <div className="dash-sidebar" style={{
         width: 220, background: '#FAF6EC', padding: '20px 16px',
@@ -1682,12 +1710,44 @@ function ScreenDashboard() {
               <div style={{ marginBottom: 12 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
                   <span style={{ fontSize: 12, color: DT.ink2 }}>{lang === 'th' ? 'ความคลาดเคลื่อนข้อต่อ' : 'Joint angle tolerance'}</span>
-                  <span style={{ fontSize: 12.5, color: DT.brand, fontFamily: DT.font.mono, fontWeight: 600 }}>±15°</span>
+                  <span style={{ fontSize: 12.5, color: DT.brand, fontFamily: DT.font.mono, fontWeight: 600 }}>±{tolerance}°</span>
                 </div>
-                <div style={{ position: 'relative', height: 16, display: 'flex', alignItems: 'center' }}>
+                <div
+                  ref={sliderRef}
+                  role="slider"
+                  tabIndex={0}
+                  aria-valuemin={5}
+                  aria-valuemax={30}
+                  aria-valuenow={tolerance}
+                  onPointerDown={(e) => {
+                    e.preventDefault();
+                    setDragging(true);
+                    updateToleranceFromX(e.clientX);
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') {
+                      e.preventDefault();
+                      setTolerance((v) => Math.max(5, v - 1));
+                    } else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') {
+                      e.preventDefault();
+                      setTolerance((v) => Math.min(30, v + 1));
+                    }
+                  }}
+                  style={{
+                    position: 'relative', height: 22, display: 'flex', alignItems: 'center',
+                    cursor: dragging ? 'grabbing' : 'pointer', touchAction: 'none', outline: 'none'
+                  }}>
                   <div style={{ position: 'absolute', left: 0, right: 0, height: 4, borderRadius: 4, background: 'rgba(60,48,30,0.10)' }} />
-                  <div style={{ position: 'absolute', left: 0, width: '50%', height: 4, borderRadius: 4, background: DT.brand }} />
-                  <div style={{ position: 'absolute', left: '50%', transform: 'translateX(-50%)', width: 14, height: 14, borderRadius: 999, background: DT.brand, boxShadow: `0 0 0 2px ${DT.surface}` }} />
+                  <div style={{ position: 'absolute', left: 0, width: `${((tolerance - 5) / 25) * 100}%`, height: 4, borderRadius: 4, background: DT.brand }} />
+                  <div style={{
+                    position: 'absolute', left: `${((tolerance - 5) / 25) * 100}%`, transform: 'translateX(-50%)',
+                    width: dragging ? 18 : 16, height: dragging ? 18 : 16, borderRadius: 999,
+                    background: DT.brand, boxShadow: `0 0 0 2px ${DT.surface}, 0 2px 6px rgba(0,0,0,0.15)`,
+                    transition: 'width .12s, height .12s'
+                  }} />
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 4, fontSize: 10, color: DT.ink3, fontFamily: DT.font.mono }}>
+                  <span>±5°</span><span>±30°</span>
                 </div>
               </div>
               <div>
